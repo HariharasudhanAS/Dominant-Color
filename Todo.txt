@@ -1,0 +1,2 @@
+1.Plot colors according to dominance.
+2.Use array masking to crop out segments.
