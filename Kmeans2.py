@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-
+import glob
 
 def find_histogram(clt):
 
@@ -26,17 +26,21 @@ def plot_colors2(hist, centroids):
 
     # return the bar chart
     return bar
-
-img = cv2.imread('/home/orange/Desktop/test/img0 20180210_160308.jpg')
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-img = img.reshape((img.shape[0] * img.shape[1],3)) #represent as row*column,channel number
-clt = KMeans(n_clusters=3) #cluster number
-clt.fit(img)
-
-hist = find_histogram(clt)
-bar = plot_colors2(hist, clt.cluster_centers_)
-
-plt.axis("off")
-plt.imshow(bar)
-plt.show()
+d=0
+list = glob.glob("/home/orange/Desktop/test/*.jpg")
+for cv_img in list:
+    img = cv2.imread(cv_img)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = img.reshape((img.shape[0] * img.shape[1],3)) #represent as row*column,channel number
+    clt = KMeans(n_clusters=3) #cluster number
+    clt.fit(img)
+    hist = find_histogram(clt)
+    bar = plot_colors2(hist, clt.cluster_centers_)
+    Z = [x for _, x in sorted(zip(hist, clt.cluster_centers_), reverse=True)]
+    np.savetxt("%s" % list[d] + ".txt", Z)
+    # fig1 = plt.gcf()
+    plt.axis("off")
+    fig = plt.imshow(bar)
+    plt.savefig("%s" % list[d] + "plot.png", bbox_inches='tight')
+    plt.close()
+    d += 1
