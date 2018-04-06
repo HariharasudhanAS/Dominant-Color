@@ -27,16 +27,27 @@ def plot_colors2(hist, centroids):
     # return the bar chart
     return bar
 d=0
-list = glob.glob("/home/orange/Desktop/test/*.jpg")
+list = glob.glob("/home/orange/Desktop/1.jpg")
 for cv_img in list:
     img = cv2.imread(cv_img)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = img.reshape((img.shape[0] * img.shape[1],3)) #represent as row*column,channel number
     clt = KMeans(n_clusters=3) #cluster number
     clt.fit(img)
+    cv_img = cv2.imread(cv_img)
     hist = find_histogram(clt)
     bar = plot_colors2(hist, clt.cluster_centers_)
-    Z = [x for _, x in sorted(zip(hist, clt.cluster_centers_), reverse=True)]
+    Z = np.array([x for _, x in sorted(zip(hist, clt.cluster_centers_), reverse=True)])
+    lower_bg = np.array(Z[0,:] - [100,100,100])
+    upper_bg = np.array(Z[0,:] + [100,100,100])
+    targetbgmask = cv2.inRange(cv_img, lower_bg, upper_bg)
+    targetbg = cv2.bitwise_and(cv_img, cv_img, mask=targetbgmask)
+    cv2.imwrite("%s" % list[d] + "bg.png", targetbg)
+    lower_fg = np.array(Z[1, :] - [100, 100, 100])
+    upper_fg = np.array(Z[1, :] + [100, 100, 100])
+    targetfgmask = cv2.inRange(cv_img, lower_fg, upper_fg)
+    targetfg = cv2.bitwise_and(cv_img, cv_img, mask=targetfgmask)
+    cv2.imwrite("%s" % list[d] + "fg.png", targetfg)
     np.savetxt("%s" % list[d] + ".txt", Z)
     # fig1 = plt.gcf()
     plt.axis("off")
