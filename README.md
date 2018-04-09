@@ -1,2 +1,1 @@
-# Bored af :(
-Lol.. Dont even think about it..
+# Dominat Color Detection
