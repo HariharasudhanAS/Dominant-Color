@@ -1694,16 +1694,17 @@ d=0
 #Main Program
 list = glob.glob("/home/orange/Desktop/test/*.jpg")
 for imagesrc in list:
-    colors = ['white','white','white']
+    colors = ['white','white']
     img = cv2.imread(imagesrc,1)
 
     #Using PIL to improve contrast and Color (Saturation)
     PILimg = Image.fromarray(img)
     conv = ImageEnhance.Color(PILimg)
-    PILimg = conv.enhance(1.7)                    #TWEAK
+    PILimg = conv.enhance(2.2)                    #TWEAK
     conv2 = ImageEnhance.Contrast(PILimg)
-    PILimg = conv.enhance(1.4)                    #TWEAK
+    PILimg = conv.enhance(1.7)                    #TWEAK
     img = np.array(PILimg)
+    copy = img
 
     #Clustering
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -1715,13 +1716,24 @@ for imagesrc in list:
     bar = plot_colors2(hist, clt.cluster_centers_)
     Z = np.array([x for _, x in sorted(zip(hist, clt.cluster_centers_), reverse=True)])
 
+    '''
+    #Trying contours on image directly
+    copy = cv2.cvtColor(copy, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(copy, 200, 255, 0)
+    cv2.imshow('thresh',thresh)
+    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cv_img = cv2.drawContours(copy, contours, -1, (0, 0, 0), 3)
+    cv2.imshow('contours', cv_img)
+    cv2.waitKey(0)
+    '''
+
     #THE part to tweak
     param = [25,25,25]                          #TWEAK
 
     #Background
     cv_img = cv2.imread(imagesrc)
     cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-    cv_img = cv2.GaussianBlur(cv_img, (7, 7), 0)        #TWEAK
+    cv_img = cv2.GaussianBlur(cv_img, (5, 5), 0)        #TWEAK
     lower_bg = np .array(Z[0,:] - param)
     upper_bg = np.array(Z[0,:] + param)
     targetbgmask = cv2.inRange(cv_img, lower_bg, upper_bg)
@@ -1750,26 +1762,39 @@ for imagesrc in list:
 
     #letter from binary mask of BG and FG
     letter = targetfgmaskinv-targetbgmask
-    cv2.imwrite("%s" % list[d] + "letterfbit.png",letter)
+
+    '''
+    #Trying Contours on binary mask
+    im2, contours, hierarchy = cv2.findContours(letter, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    letcon = letter
+    cv_img = cv2.imread(imagesrc)
+    if len(contours) > 2:
+        cv_img = cv2.drawContours(cv_img, contours, -1, (0, 0, 0), 3)
+    cv2.imshow('contours',cv_img)
+    cv2.waitKey(0)
+    #cv2.imwrite("%s" % list[d] + "letterfbit.png",letter)
+    '''
 
     #Post-processing of mask
     kernel = np.ones((2, 2), np.uint8)          #TWEAK
     targetlettermask = cv2.morphologyEx(targetlettermask, cv2.MORPH_OPEN, kernel)
+    letter = cv2.morphologyEx(letter, cv2.MORPH_OPEN, kernel)
     cv2.imwrite("%s" % list[d] + "lettermask.png", targetlettermask)
+    cv2.imwrite("%s" % list[d] + "letterfbit.png", letter)
 
     #RGB Values
     #np.savetxt("%s" % list[d] + ".txt", Z)
 
     #Label RGB values
-    for i in range(1,3):
-        colors[i] = nameofcol(Z[i,:])
+    for i in range(0,2):
+        colors[i] = nameofcol(Z[i+1,:])
     colors = np.array(colors)
-    np.savetxt("%s" % list[d] + "colors.txt", colors, fmt="%s")
+    #np.savetxt("%s" % list[d] + "colors.txt", colors, fmt="%s")
 
     #Plot bar
     plt.axis("off")
     fig = plt.imshow(bar)
-    plt.savefig("%s" % list[d] + "plot.png", bbox_inches='tight')
+    #plt.savefig("%s" % list[d] + "plot.png", bbox_inches='tight')
     plt.close()
     d += 1
 
