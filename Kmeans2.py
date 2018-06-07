@@ -27,7 +27,7 @@ def plot_colors2(hist, centroids):
     # return the bar chart
     return bar
 d=0
-list = glob.glob("/home/orange/Desktop/shape/*.jpg")
+list = glob.glob("/home/orange/Desktop/justrun/*.jpg")
 for imagesrc in list:
     img = cv2.imread(imagesrc)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
