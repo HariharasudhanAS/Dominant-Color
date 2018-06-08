@@ -1680,7 +1680,7 @@ colorlist = [
 
 #Labels the RGB value
 def nameofcol(centroid) :
-    mindist = 441.67
+    mindist = 442
     color = 'white'
     for i in range(0, len(colorlist)):
         dist = np.linalg.norm(np.array(centroid) - np.array(colorlist[i][0]))
@@ -1692,7 +1692,7 @@ def nameofcol(centroid) :
 d=0
 
 #Main Program
-list = glob.glob("/home/orange/Desktop/test/*.jpg")
+list = glob.glob("/home/orange/Desktop/testing/11/*.jpg")
 for imagesrc in list:
     colors = ['white','white']
     img = cv2.imread(imagesrc,1)
@@ -1763,20 +1763,27 @@ for imagesrc in list:
     #letter from binary mask of BG and FG
     letter = targetfgmaskinv-targetbgmask
 
-    '''
+
     #Trying Contours on binary mask
     im2, contours, hierarchy = cv2.findContours(letter, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     letcon = letter
     cv_img = cv2.imread(imagesrc)
-    if len(contours) > 2:
-        cv_img = cv2.drawContours(cv_img, contours, -1, (0, 0, 0), 3)
-    cv2.imshow('contours',cv_img)
-    cv2.waitKey(0)
+    cv_img = cv2.drawContours(cv_img, contours, 0, 0, 3)
+    mask = np.zeros(cv_img.shape, np.uint8)
+    cv2.drawContours(mask, contours, 0, 255, 1)
+    mask = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
+    _, cv_img = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
+    kernel = np.ones((6, 6), np.uint8)
+    dilation = cv2.dilate(cv_img, kernel, iterations=1)
     #cv2.imwrite("%s" % list[d] + "letterfbit.png",letter)
-    '''
+
 
     #Post-processing of mask
     kernel = np.ones((2, 2), np.uint8)          #TWEAK
+    targetlettermask = cv2.morphologyEx(targetlettermask, cv2.MORPH_OPEN, kernel)
+    letter = cv2.morphologyEx(letter, cv2.MORPH_OPEN, kernel)
+    letter = letter - dilation
+    targetlettermask = targetlettermask - dilation
     targetlettermask = cv2.morphologyEx(targetlettermask, cv2.MORPH_OPEN, kernel)
     letter = cv2.morphologyEx(letter, cv2.MORPH_OPEN, kernel)
     cv2.imwrite("%s" % list[d] + "lettermask.png", targetlettermask)
